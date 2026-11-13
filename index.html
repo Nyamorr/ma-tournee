@@ -1,0 +1,749 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Ma Tournée</title>
+<meta name="theme-color" content="#1d3c8f">
+<meta name="description" content="Carnet de prospection fibre en porte-à-porte">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+/* Layout: one-thumb phone app. Enamel street-plate header, single column, fixed bottom tab bar. */
+:root{
+  --bg:#eef1f6; --surface:#ffffff; --fg:#141a2b; --muted:#5b6478; --line:#d5dbe6;
+  --plate:#1d3c8f; --plate-fg:#ffffff; --plate-rim:#2f7a4a;
+  --accent:#1d3c8f; --accent-soft:#e3e9f8;
+  --s-absent:#7a8296; --s-refus:#c0392b; --s-pres:#b7791f; --s-vente:#23824a; --s-old:#2463c7;
+  --s-absent-bg:#eceef3; --s-refus-bg:#fbe8e6; --s-pres-bg:#fbf1dc; --s-vente-bg:#e0f3e7; --s-old-bg:#e2ecfb;
+  --shadow:0 1px 2px rgba(20,26,43,.08),0 4px 14px rgba(20,26,43,.06);
+  --f-display:"Barlow Condensed","Roboto Condensed","sans-serif-condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:system-ui,-apple-system,Roboto,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0f1320; --surface:#181e2f; --fg:#e8ecf5; --muted:#9aa3b8; --line:#2a3249;
+  --plate:#2346a8; --plate-fg:#ffffff; --plate-rim:#3c9a5f;
+  --accent:#7ea2ff; --accent-soft:#1f2a4a;
+  --s-absent:#a3abbe; --s-refus:#f0796b; --s-pres:#e7b04f; --s-vente:#5fcf8c; --s-old:#79a8ff;
+  --s-absent-bg:#232a3d; --s-refus-bg:#3a1f22; --s-pres-bg:#3a2f18; --s-vente-bg:#16362a; --s-old-bg:#1b2b4a;
+  --shadow:0 1px 2px rgba(0,0,0,.4); color-scheme:dark}}
+
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.4;-webkit-tap-highlight-color:transparent}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+[hidden]{display:none!important}
+.wrap{max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:calc(14px + env(safe-area-inset-top,0px)) calc(96px + env(safe-area-inset-bottom,0px))}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+.plate{background:var(--plate);color:var(--plate-fg);border-radius:10px;padding:5px;box-shadow:var(--shadow)}
+.plate-in{border:2px solid var(--plate-rim);border-radius:7px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.plate h1{font-family:var(--f-display);font-weight:700;font-size:30px;letter-spacing:.04em;text-transform:uppercase;margin:0;line-height:1}
+.plate .sub{font-size:13px;opacity:.85;letter-spacing:.03em}
+.plate .count{font-family:var(--f-display);font-size:28px;font-weight:700;text-align:right;line-height:1;font-variant-numeric:tabular-nums}
+.plate .count small{display:block;font-family:var(--f-body);font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;opacity:.8}
+.plate-right{display:flex;align-items:center;gap:12px}
+.gear{background:none;border:1px solid rgba(255,255,255,.4);color:var(--plate-fg);border-radius:8px;width:40px;height:40px;display:grid;place-items:center;flex:none}
+.gear svg{width:22px;height:22px}
+
+h2{font-family:var(--f-display);font-weight:700;font-size:22px;letter-spacing:.02em;text-transform:uppercase;margin:22px 0 10px;text-wrap:balance}
+.label{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;display:block}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:var(--shadow)}
+.stack{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;gap:10px;align-items:flex-end}
+.row > *{min-width:0}
+.grow{flex:1}
+input[type=text],input[type=tel],input[type=number],input[type=date],input[type=datetime-local],select,textarea{
+  width:100%;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:11px 12px;font-size:16px}
+textarea{min-height:70px;resize:vertical}
+
+.gps{display:flex;gap:10px;align-items:center}
+.gps-btn{flex:none;display:flex;align-items:center;gap:8px;border:0;border-radius:10px;padding:11px 14px;background:var(--accent);color:var(--surface);font-weight:600}
+.gps-btn svg{width:20px;height:20px}
+.gps-btn[aria-busy=true] svg{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.gps-msg{font-size:13px;color:var(--muted);min-width:0}
+.sugg{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.sugg button{flex:none;border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:6px 11px;font-size:14px;white-space:nowrap}
+
+.num{display:flex;align-items:stretch;gap:6px}
+.num input{width:84px;text-align:center;font-family:var(--f-display);font-size:28px;font-weight:700;padding:4px 6px;font-variant-numeric:tabular-nums}
+.step{min-width:48px;border:1px solid var(--line);background:var(--surface);border-radius:9px;font-family:var(--f-display);font-size:20px;font-weight:700}
+.step.main{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+
+.outcomes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.oc{border:2px solid transparent;border-radius:12px;padding:14px 10px;font-family:var(--f-display);font-size:21px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;text-align:left;display:flex;flex-direction:column;gap:2px;min-height:68px}
+.oc small{font-family:var(--f-body);font-size:12px;font-weight:500;text-transform:none;letter-spacing:0;opacity:.8}
+.oc.wide{grid-column:1/-1}
+.oc:active{transform:scale(.98)}
+[data-s=absent]{--c:var(--s-absent);--cb:var(--s-absent-bg)}
+[data-s=refus]{--c:var(--s-refus);--cb:var(--s-refus-bg)}
+[data-s=pres]{--c:var(--s-pres);--cb:var(--s-pres-bg)}
+[data-s=vente]{--c:var(--s-vente);--cb:var(--s-vente-bg)}
+[data-s=rappel],[data-s=rdv]{--c:var(--s-old);--cb:var(--s-old-bg)}
+.oc,.chip{background:var(--cb);color:var(--c)}
+
+.btn{border:0;border-radius:10px;padding:13px 16px;font-weight:600;font-size:16px;background:var(--accent);color:var(--surface);text-align:center;text-decoration:none;display:inline-block}
+.btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--line)}
+.btn.danger{background:var(--s-refus);color:var(--surface)}
+.btn.small{padding:8px 12px;font-size:14px}
+.btn.block{width:100%;display:block}
+
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:3px 9px;border-radius:999px;white-space:nowrap;flex:none}
+.chip::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.list{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.item{display:flex;gap:12px;align-items:center;padding:11px 14px;border:0;border-top:1px solid var(--line);background:none;text-align:left;width:100%}
+.item:first-child{border-top:0}
+.item .no{font-family:var(--f-display);font-size:24px;font-weight:700;min-width:44px;text-align:center;font-variant-numeric:tabular-nums}
+.item .body{flex:1;min-width:0}
+.item .t{font-weight:600;overflow-wrap:anywhere;display:block}
+.item .m{font-size:13px;color:var(--muted);overflow-wrap:anywhere;display:block}
+.street-h{font-family:var(--f-display);font-size:16px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding:10px 14px 6px;background:var(--bg);border-top:1px solid var(--line)}
+.street-h:first-child{border-top:0}
+.ghead{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.ghead b{font-variant-numeric:tabular-nums;color:var(--fg);font-family:var(--f-body);font-size:14px;letter-spacing:0;text-transform:none}
+.empty{padding:22px 16px;text-align:center;color:var(--muted)}
+.empty b{display:block;color:var(--fg);font-size:17px;margin-bottom:4px}
+.filters{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px}
+.filters button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:14px;white-space:nowrap}
+.filters button.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.tel{font-variant-numeric:tabular-nums;user-select:all}
+.tag{display:inline-block;font-size:12px;font-weight:600;padding:1px 7px;border-radius:6px;background:var(--accent-soft);color:var(--accent);margin-right:4px}
+.tag.code{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.tag.annule{background:var(--s-refus-bg);color:var(--s-refus)}
+.tag.raccorde{background:var(--s-vente-bg);color:var(--s-vente)}
+.tag.attente{background:var(--s-pres-bg);color:var(--s-pres)}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.fgrid > *{min-width:0}
+.fgrid select{padding:9px 10px;font-size:15px}
+.banner{display:flex;gap:10px;align-items:center;justify-content:space-between;background:var(--s-pres-bg);color:var(--fg);border-radius:12px;padding:10px 12px;margin-top:12px;font-size:14px}
+
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-width:0}
+.kpi .v{font-family:var(--f-display);font-size:30px;font-weight:700;line-height:1.05;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.kpi .k{font-size:12px;color:var(--muted);letter-spacing:.04em}
+.seg{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px;margin-bottom:10px}
+.seg button{flex:1;border:0;background:none;border-radius:8px;padding:8px;font-weight:600;color:var(--muted)}
+.seg button.on{background:var(--accent-soft);color:var(--accent)}
+.bars{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;align-items:end;height:130px;padding:10px 4px 0}
+.bar{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;gap:3px}
+.bar .col{width:100%;max-width:30px;background:var(--s-absent-bg);border-radius:5px 5px 0 0;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;min-height:2px}
+.bar .col i{display:block;background:var(--s-vente)}
+.bar .n{font-size:11px;font-weight:600;font-variant-numeric:tabular-nums}
+.bar .d{font-size:11px;color:var(--muted)}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-top:8px}
+.legend span::before{content:"";display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px;background:var(--s-absent-bg)}
+.legend span.v::before{background:var(--s-vente)}
+.funnel{display:flex;flex-direction:column;gap:6px}
+.fl{display:grid;grid-template-columns:110px 1fr 44px;gap:8px;align-items:center;font-size:14px}
+.fl .tr{height:12px;background:var(--bg);border-radius:6px;overflow:hidden}
+.fl .tr i{display:block;height:100%;background:var(--accent);border-radius:6px}
+.fl .c{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px);z-index:5}
+nav.tabs .in{display:flex;max-width:560px;width:100%}
+nav.tabs button{flex:1;border:0;background:none;padding:9px 2px 11px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;font-weight:600;color:var(--muted);position:relative}
+nav.tabs button svg{width:24px;height:24px}
+nav.tabs button.on{color:var(--accent)}
+nav.tabs .badge{position:absolute;top:4px;left:calc(50% + 6px);background:var(--s-refus);color:#fff;font-size:10px;border-radius:999px;padding:1px 5px;min-width:16px}
+
+.scrim{position:fixed;inset:0;background:rgba(10,14,25,.5);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);width:100%;max-width:560px;max-height:92%;overflow-y:auto;border-radius:16px 16px 0 0;padding:16px max(16px,env(safe-area-inset-right,0px)) calc(18px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.sheet h3{font-family:var(--f-display);font-size:24px;text-transform:uppercase;margin:0 0 12px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(78px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);border-radius:10px;padding:10px 12px 10px 14px;display:flex;gap:12px;align-items:center;z-index:30;box-shadow:var(--shadow);max-width:calc(100% - 32px);font-size:15px}
+.toast button{background:none;border:0;color:var(--bg);font-weight:700;text-decoration:underline;padding:4px}
+.note{font-size:13px;color:var(--muted);margin:8px 0 0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}.oc:active{transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="plate"><div class="plate-in">
+    <div><h1>Ma Tournée</h1><div class="sub" id="today"></div></div>
+    <div class="plate-right">
+      <div class="count" id="doorsToday">0<small>portes</small></div>
+      <button class="gear" id="open-settings" aria-label="Réglages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+    </div>
+  </div></header>
+
+  <div class="banner" id="backup-banner" hidden><span id="backup-msg"></span><button class="btn small" id="backup-now">Sauvegarder</button></div>
+
+  <!-- PORTE -->
+  <section id="v-porte">
+    <h2>Porte en cours</h2>
+    <div class="card stack">
+      <div class="gps">
+        <button class="gps-btn" id="locate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7"/></svg>Ma position</button>
+        <span class="gps-msg" id="gps-msg">Remplit la rue, le numéro et la commune.</span>
+      </div>
+      <div class="sugg" id="sugg" hidden></div>
+      <div>
+        <label class="label" for="f-rue">Rue</label>
+        <input type="text" id="f-rue" list="dl-rues" placeholder="Rue Jean Jaurès" autocomplete="off">
+        <datalist id="dl-rues"></datalist>
+      </div>
+      <div class="row">
+        <div>
+          <span class="label">Numéro</span>
+          <div class="num">
+            <button class="step" id="n-minus" aria-label="Numéro précédent">−</button>
+            <input type="text" id="f-num" inputmode="numeric" placeholder="1" aria-label="Numéro de la porte">
+            <button class="step main" id="n-plus" aria-label="Porte suivante">+2</button>
+          </div>
+        </div>
+        <div class="grow">
+          <label class="label" for="f-ville">Commune</label>
+          <input type="text" id="f-ville" list="dl-villes" placeholder="Nantes" autocomplete="off">
+          <datalist id="dl-villes"></datalist>
+        </div>
+      </div>
+      <div>
+        <span class="label">Après chaque porte</span>
+        <div class="seg" style="margin:0" role="group" aria-label="Après chaque porte">
+          <button data-pas="2">Numéro +2</button><button data-pas="1">Numéro +1</button><button data-pas="gps">Relocaliser</button>
+        </div>
+      </div>
+    </div>
+
+    <h2>Résultat</h2>
+    <div class="outcomes">
+      <button class="oc" data-s="absent">Absent<small>Un geste, porte suivante</small></button>
+      <button class="oc" data-s="refus">Pas intéressé<small>Un geste, porte suivante</small></button>
+      <button class="oc wide" data-s="pres">Pas intéressé après présentation<small>A écouté l'offre puis refusé · un geste, porte suivante</small></button>
+      <button class="oc wide" data-s="vente">Vendu<small>Offre, code vendeur, client</small></button>
+    </div>
+
+    <h2>Dernières portes</h2>
+    <div class="list" id="recent"></div>
+  </section>
+
+  <!-- JOURNAL -->
+  <section id="v-journal" hidden>
+    <h2>Journal</h2>
+    <div class="row" style="margin-bottom:10px">
+      <div class="grow"><label class="label" for="j-date">Jour</label><input type="date" id="j-date"></div>
+      <div class="grow"><label class="label" for="j-q">Chercher</label><input type="text" id="j-q" placeholder="Nom, rue…"></div>
+    </div>
+    <div class="filters" id="j-filters"></div>
+    <div class="list" id="journal"></div>
+  </section>
+
+  <!-- REPASSER -->
+  <section id="v-repasser" hidden>
+    <div id="rappels-wrap" hidden>
+      <h2>Anciens rappels et RDV</h2>
+      <div class="list" id="rappels"></div>
+    </div>
+    <h2>À repasser</h2>
+    <p class="note" style="margin:-4px 0 10px">Portes absentes ces 14 derniers jours, sans autre passage depuis.</p>
+    <div class="list" id="repasser"></div>
+  </section>
+
+  <!-- CLIENTS -->
+  <section id="v-clients" hidden>
+    <h2>Portefeuille clients</h2>
+    <div class="seg" id="c-group" role="group" aria-label="Regrouper par">
+      <button data-g="ville">Par commune</button><button data-g="code">Par code</button><button data-g="produit">Par offre</button>
+    </div>
+    <div class="fgrid">
+      <div><label class="label" for="c-ville">Commune</label><select id="c-ville"></select></div>
+      <div><label class="label" for="c-rue">Rue</label><select id="c-rue"></select></div>
+      <div><label class="label" for="c-code">Code vendeur</label><select id="c-code"></select></div>
+      <div><label class="label" for="c-produit">Offre</label><select id="c-produit"></select></div>
+      <div><label class="label" for="c-suivi">Suivi</label><select id="c-suivi"></select></div>
+      <div><label class="label" for="c-q">Chercher</label><input type="text" id="c-q" placeholder="Nom, tél…"></div>
+    </div>
+    <div class="kpis" id="c-kpis" style="margin-bottom:12px"></div>
+    <div class="list" id="clients"></div>
+  </section>
+
+  <!-- BILAN -->
+  <section id="v-bilan" hidden>
+    <h2>Bilan</h2>
+    <div class="seg" id="b-period">
+      <button data-p="day" class="on">Aujourd'hui</button><button data-p="week">7 jours</button><button data-p="month">Ce mois</button>
+    </div>
+    <div class="kpis" id="kpis"></div>
+    <h2>Entonnoir</h2>
+    <div class="card"><div class="funnel" id="funnel"></div></div>
+    <h2>7 derniers jours</h2>
+    <div class="card">
+      <div class="bars" id="bars"></div>
+      <div class="legend"><span>Portes</span><span class="v">Ventes</span></div>
+    </div>
+    <h2>Données</h2>
+    <div class="card stack">
+      <button class="btn block" id="backup">Sauvegarde complète</button>
+      <button class="btn ghost block" id="export">Exporter en CSV (tableur)</button>
+      <button class="btn ghost block" id="restore">Restaurer une sauvegarde ou un CSV</button>
+      <input type="file" id="restore-file" accept=".json,.csv,application/json,text/csv" hidden>
+      <p class="note" id="data-note">Tes données restent sur ce téléphone. Fais une sauvegarde complète chaque semaine et range le fichier dans ton cloud Murena.</p>
+    </div>
+  </section>
+</div>
+
+<nav class="tabs"><div class="in">
+  <button data-v="porte"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 21V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v17M3 21h18M14 12h.01"/></svg>Porte</button>
+  <button data-v="journal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Journal</button>
+  <button data-v="repasser"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 15.5-6.3L21 8M21 3v5h-5M21 12a9 9 0 0 1-15.5 6.3L3 16M3 21v-5h5"/></svg>Repasser<span class="badge" id="badge" hidden></span></button>
+  <button data-v="clients"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg>Clients</button>
+  <button data-v="bilan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Bilan</button>
+</div></nav>
+
+<div class="scrim" id="scrim" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function(){
+"use strict";
+const S = {
+  absent:{l:"Absent"}, refus:{l:"Pas intéressé"}, pres:{l:"Pas intéressé après présentation"}, vente:{l:"Vendu"},
+  rappel:{l:"À rappeler",legacy:true}, rdv:{l:"RDV pris",legacy:true}
+};
+const SUIVI = { signe:"Signé", attente:"En attente de raccordement", raccorde:"Raccordé", annule:"Annulé" };
+const OPEN = s => s !== "absent";
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad = n => String(n).padStart(2,"0");
+const dayKey = d => { d = new Date(d); return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); };
+const todayKey = () => dayKey(Date.now());
+const fmtTime = ts => { const d = new Date(ts); return pad(d.getHours())+"h"+pad(d.getMinutes()); };
+const fmtWhen = s => { if(!s) return ""; const d = new Date(s); if(isNaN(d)) return s;
+  return d.toLocaleDateString("fr-FR",{weekday:"short",day:"numeric",month:"short"})+(s.length>10?" à "+pad(d.getHours())+"h"+pad(d.getMinutes()):""); };
+const euro = n => (Number(n)||0).toLocaleString("fr-FR",{style:"currency",currency:"EUR",maximumFractionDigits:0});
+const ls = {
+  get(k,def){ try{ const v = localStorage.getItem(k); return v==null?def:JSON.parse(v); }catch(e){ return def; } },
+  set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ return false; } }
+};
+
+/* ---------- Storage (this phone only) ---------- */
+let visits = [];
+const DEFAULT_SETTINGS = { produits:["Fibre 500 Mb/s","Fibre 1 Gb/s","Fibre 2 Gb/s","Fibre + TV","Fibre + TV + Mobile"], codes:[], lastCode:"" };
+let settings = Object.assign({}, DEFAULT_SETTINGS, ls.get("mt.settings", {}));
+function persist(){ if(!ls.set("mt.visits", visits)) showToast("Mémoire pleine : fais une sauvegarde puis libère de l'espace."); }
+function setVisits(arr){ visits = arr.slice().sort((a,b)=>b.ts-a.ts); renderAll(); }
+function save(v){ const i = visits.findIndex(x=>x.id===v.id); if(i>=0) visits[i]=v; else visits.push(v); setVisits(visits); persist(); }
+function remove(id){ setVisits(visits.filter(x=>x.id!==id)); persist(); }
+function saveSettings(){ ls.set("mt.settings", settings); renderAll(); }
+function newId(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+try{ navigator.storage && navigator.storage.persist && navigator.storage.persist(); }catch(e){}
+
+/* ---------- GPS + Base Adresse Nationale ---------- */
+const fRue=$("f-rue"), fNum=$("f-num"), fVille=$("f-ville");
+let locating = false;
+async function reverse(lat, lon){
+  const urls = [
+    `https://data.geopf.fr/geocodage/reverse?lon=${lon}&lat=${lat}&index=address&limit=8`,
+    `https://api-adresse.data.gouv.fr/reverse/?lon=${lon}&lat=${lat}&limit=8`
+  ];
+  for(const u of urls){
+    try{ const r = await fetch(u); if(r.ok){ const j = await r.json(); if(j && j.features) return j.features.map(f=>f.properties); } }catch(e){}
+  }
+  throw new Error("reseau");
+}
+function applyAddr(p){
+  fRue.value = p.street || p.name || ""; if(p.housenumber) fNum.value = p.housenumber; fVille.value = p.city || fVille.value; keepDraft();
+}
+function locate(){
+  if(locating) return;
+  if(!("geolocation" in navigator)){ $("gps-msg").textContent = "Ce navigateur ne donne pas accès à la position."; return; }
+  locating = true; $("locate").setAttribute("aria-busy","true"); $("gps-msg").textContent = "Recherche de la position…";
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    const {latitude:lat, longitude:lon, accuracy} = pos.coords;
+    try{
+      const res = await reverse(lat.toFixed(6), lon.toFixed(6));
+      const near = res.filter(p=>p.street||p.name).sort((a,b)=>(a.distance||0)-(b.distance||0));
+      if(!near.length){ $("gps-msg").textContent = "Aucune adresse trouvée ici. Saisis la rue à la main."; }
+      else{
+        const best = near.find(p=>p.housenumber) || near[0];
+        applyAddr(best);
+        $("gps-msg").textContent = `Précision ±${Math.round(accuracy)} m. Vérifie le numéro.`;
+        const seen = new Set(); const opts = near.filter(p=>{ const k=p.label; if(seen.has(k)) return false; seen.add(k); return true; }).slice(0,6);
+        $("sugg").innerHTML = opts.map((p,i)=>`<button data-i="${i}">${esc((p.housenumber?p.housenumber+" ":"")+(p.street||p.name))}</button>`).join("");
+        $("sugg").hidden = opts.length<2;
+        $("sugg").querySelectorAll("button").forEach(b=>b.onclick=()=>{ applyAddr(opts[+b.dataset.i]); });
+      }
+    }catch(e){ $("gps-msg").textContent = "Pas de réseau pour trouver l'adresse. Saisis la rue à la main."; }
+    locating = false; $("locate").removeAttribute("aria-busy");
+  }, err=>{
+    locating = false; $("locate").removeAttribute("aria-busy");
+    $("gps-msg").textContent = err.code===1 ? "Position refusée. Autorise la localisation pour ce site dans les réglages du navigateur."
+      : err.code===3 ? "Position trop longue à obtenir. Réessaie à l'extérieur." : "Position indisponible. Active la localisation du téléphone.";
+  }, {enableHighAccuracy:true, timeout:20000, maximumAge:5000});
+}
+$("locate").onclick = locate;
+
+/* ---------- Porte ---------- */
+let pas = ls.get("mt.pas", 2);
+function setPas(p){ pas=p; ls.set("mt.pas",p);
+  document.querySelectorAll("[data-pas]").forEach(b=>b.classList.toggle("on", String(b.dataset.pas)===String(p)));
+  $("n-plus").textContent = "+"+(p===1?1:2); }
+document.querySelectorAll("[data-pas]").forEach(b=>b.onclick=()=>setPas(b.dataset.pas==="gps"?"gps":+b.dataset.pas));
+const draft = ls.get("mt.draft",{});
+fRue.value = draft.rue||""; fNum.value = draft.num||""; fVille.value = draft.ville||"";
+function keepDraft(){ ls.set("mt.draft",{rue:fRue.value,num:fNum.value,ville:fVille.value}); }
+[fRue,fNum,fVille].forEach(el=>el.addEventListener("input",keepDraft));
+function bump(d){ const m = String(fNum.value).match(/^(\d+)/); const n = m ? parseInt(m[1],10) : 0; fNum.value = Math.max(1, n + d); keepDraft(); }
+const stepSize = () => pas===1 ? 1 : 2;
+function next(){ if(pas==="gps") locate(); else bump(stepSize()); }
+$("n-plus").onclick=()=>bump(stepSize());
+$("n-minus").onclick=()=>bump(-stepSize());
+
+document.querySelectorAll(".oc").forEach(b=>b.addEventListener("click",()=>{
+  const s = b.dataset.s;
+  if(!fRue.value.trim()){ fRue.focus(); showToast("Indique d'abord la rue, ou touche « Ma position »."); return; }
+  const base = {id:newId(), ts:Date.now(), rue:fRue.value.trim(), num:fNum.value.trim(), ville:fVille.value.trim(), statut:s};
+  if(s!=="vente"){ save(base); next(); showToast("N°"+(base.num||"?")+" · "+S[s].l, base); }
+  else openSheet(base, true);
+}));
+
+/* ---------- Sheets ---------- */
+function opts(list, cur){
+  const all = list.slice(); if(cur && !all.includes(cur)) all.push(cur);
+  return all.map(x=>`<option value="${esc(x)}" ${x===cur?"selected":""}>${esc(x)}</option>`).join("");
+}
+function openSettings(){
+  $("sheet").innerHTML = `<h3>Réglages</h3>
+    <form class="stack" id="stf">
+      <div><label class="label" for="st-prod">Mes offres fibre (une par ligne)</label>
+        <textarea id="st-prod" rows="6">${esc(settings.produits.join("\n"))}</textarea></div>
+      <div><label class="label" for="st-codes">Mes codes vendeur (un par ligne)</label>
+        <textarea id="st-codes" rows="4" placeholder="Ex. : VD12345">${esc(settings.codes.join("\n"))}</textarea>
+        <p class="note">Le dernier code utilisé est proposé par défaut à la vente suivante.</p></div>
+      <button class="btn block" type="submit">Enregistrer</button>
+      <button class="btn ghost block" type="button" id="st-cancel">Annuler</button>
+    </form>`;
+  const lines = id => [...new Set($(id).value.split("\n").map(s=>s.trim()).filter(Boolean))];
+  $("stf").onsubmit = e=>{ e.preventDefault(); settings.produits = lines("st-prod"); settings.codes = lines("st-codes");
+    if(!settings.codes.includes(settings.lastCode)) settings.lastCode = settings.codes[0]||"";
+    saveSettings(); closeSheet(); showToast("Réglages enregistrés."); };
+  $("st-cancel").onclick = closeSheet;
+  $("scrim").hidden=false;
+}
+$("open-settings").onclick = openSettings;
+
+function openSheet(v, isNew){
+  $("sheet").innerHTML = `
+    <h3>${isNew?"N°"+esc(v.num||"?")+" "+esc(v.rue):"Modifier la porte"}</h3>
+    <form class="stack" id="sf">
+      <div><label class="label" for="s-statut">Résultat</label>
+        <select id="s-statut">${Object.keys(S).filter(k=>!S[k].legacy||k===v.statut).map(k=>`<option value="${k}" ${k===v.statut?"selected":""}>${S[k].l}</option>`).join("")}</select></div>
+      ${isNew?"":`<div class="row"><div style="width:90px"><label class="label" for="s-num">N°</label><input type="text" id="s-num" value="${esc(v.num)}"></div>
+        <div class="grow"><label class="label" for="s-rue">Rue</label><input type="text" id="s-rue" value="${esc(v.rue)}"></div></div>
+        <div><label class="label" for="s-ville">Commune</label><input type="text" id="s-ville" value="${esc(v.ville)}"></div>`}
+      <div><label class="label" for="s-nom">Nom</label><input type="text" id="s-nom" value="${esc(v.nom)}" autocomplete="off" placeholder="M. et Mme Martin"></div>
+      <div><label class="label" for="s-tel">Téléphone</label><input type="tel" id="s-tel" value="${esc(v.tel)}" placeholder="06 12 34 56 78"></div>
+      <div id="s-date-wrap"><label class="label" for="s-date">Date</label><input type="datetime-local" id="s-date" value="${esc(v.rappel)}"></div>
+      <div id="s-prod-wrap"><label class="label" for="s-produit">Offre fibre</label>
+        <select id="s-produit"><option value="">— Choisir l'offre —</option>${opts(settings.produits, v.produit)}</select></div>
+      <div id="s-vente-wrap" class="stack">
+        <div class="row">
+          <div class="grow"><label class="label" for="s-code">Code vendeur utilisé</label>
+            <select id="s-code"><option value="">— Aucun —</option>${opts(settings.codes, v.code ?? (isNew?settings.lastCode:""))}</select></div>
+          <div class="grow"><label class="label" for="s-suivi">Suivi</label>
+            <select id="s-suivi">${Object.keys(SUIVI).map(k=>`<option value="${k}" ${k===(v.suivi||"signe")?"selected":""}>${SUIVI[k]}</option>`).join("")}</select></div>
+        </div>
+        ${settings.codes.length?"":`<p class="note" style="margin:0">Ajoute tes codes vendeur avec la roue crantée en haut de l'écran.</p>`}
+        <div><label class="label" for="s-mt">Montant de la vente (€)</label><input type="number" id="s-mt" inputmode="decimal" min="0" step="1" value="${esc(v.montant)}"></div>
+      </div>
+      <div><label class="label" for="s-notes">Notes</label><textarea id="s-notes" placeholder="Opérateur actuel, revoir le conjoint…">${esc(v.notes)}</textarea></div>
+      <button class="btn block" type="submit">Enregistrer</button>
+      <div class="row">
+        <button class="btn ghost grow" type="button" id="s-cancel">Annuler</button>
+        ${isNew?"":`<button class="btn ghost grow" type="button" id="s-del" style="color:var(--s-refus)">Supprimer</button>`}
+      </div>
+      <div id="s-confirm" hidden class="card" style="background:var(--s-refus-bg)">
+        <p style="margin:0 0 10px">Supprimer définitivement cette porte ?</p>
+        <div class="row"><button class="btn danger grow" type="button" id="s-del-yes">Supprimer</button><button class="btn ghost grow" type="button" id="s-del-no">Garder</button></div>
+      </div>
+    </form>`;
+  const sel = $("s-statut");
+  function sync(){ const s = sel.value;
+    $("s-date-wrap").hidden = !(s==="rappel"||s==="rdv");
+    $("s-vente-wrap").hidden = s!=="vente";
+    $("s-prod-wrap").hidden = !(s==="vente"||s==="pres"||s==="rdv"||s==="rappel"); }
+  sel.onchange=sync; sync();
+  $("sf").onsubmit = e=>{
+    e.preventDefault();
+    const nv = Object.assign({}, v, {
+      statut: sel.value, nom: $("s-nom").value.trim(), tel: $("s-tel").value.trim(),
+      rappel: $("s-date-wrap").hidden ? "" : $("s-date").value,
+      montant: $("s-vente-wrap").hidden ? "" : $("s-mt").value,
+      produit: $("s-prod-wrap").hidden ? "" : $("s-produit").value,
+      code: $("s-vente-wrap").hidden ? "" : $("s-code").value,
+      suivi: $("s-vente-wrap").hidden ? "" : $("s-suivi").value,
+      notes: $("s-notes").value.trim()
+    });
+    if(!isNew){ nv.num=$("s-num").value.trim(); nv.rue=$("s-rue").value.trim(); nv.ville=$("s-ville").value.trim(); }
+    if(nv.code && nv.code!==settings.lastCode){ settings.lastCode = nv.code; saveSettings(); }
+    save(nv); closeSheet();
+    if(isNew){ next(); showToast("N°"+(nv.num||"?")+" · "+S[nv.statut].l, nv); }
+  };
+  $("s-cancel").onclick = closeSheet;
+  if(!isNew){
+    $("s-del").onclick = ()=>{ $("s-confirm").hidden=false; $("s-del-yes").focus(); };
+    $("s-del-no").onclick = ()=>{ $("s-confirm").hidden=true; };
+    $("s-del-yes").onclick = ()=>{ remove(v.id); closeSheet(); showToast("Porte supprimée."); };
+  }
+  $("scrim").hidden=false;
+  setTimeout(()=>{ (isNew?$("s-nom"):sel).focus(); }, 50);
+}
+function closeSheet(){ $("scrim").hidden=true; $("sheet").innerHTML=""; }
+$("scrim").addEventListener("click",e=>{ if(e.target.id==="scrim") closeSheet(); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape" && !$("scrim").hidden) closeSheet(); });
+
+/* ---------- Toast with undo ---------- */
+let tt;
+function showToast(msg, undo){
+  const t=$("toast"); t.innerHTML = `<span>${esc(msg)}</span>`+(undo?`<button id="undo">Annuler</button>`:"");
+  t.hidden=false; clearTimeout(tt); tt=setTimeout(()=>t.hidden=true, 4500);
+  if(undo) $("undo").onclick=()=>{ remove(undo.id); fRue.value=undo.rue; fNum.value=undo.num; fVille.value=undo.ville; keepDraft(); t.hidden=true; };
+}
+
+/* ---------- Rendering ---------- */
+function itemHTML(v, o={}){
+  const meta = [];
+  if(o.showDate) meta.push(new Date(v.ts).toLocaleDateString("fr-FR",{day:"numeric",month:"short"}));
+  meta.push(fmtTime(v.ts));
+  if(v.nom && !o.client) meta.push(esc(v.nom));
+  if(v.statut==="vente" && v.montant) meta.push(euro(v.montant));
+  if((v.statut==="rappel"||v.statut==="rdv") && v.rappel) meta.push("→ "+esc(fmtWhen(v.rappel)));
+  if(o.client && v.tel) meta.push(`<span class="tel">${esc(v.tel)}</span>`);
+  const tags = (v.produit?`<span class="tag">${esc(v.produit)}</span>`:"")+(v.code?`<span class="tag code">${esc(v.code)}</span>`:"")
+    +(v.statut==="vente"&&v.suivi&&v.suivi!=="signe"?`<span class="tag ${esc(v.suivi)}">${esc(SUIVI[v.suivi]||"")}</span>`:"");
+  const title = o.client ? esc(v.nom||"Sans nom")+" · "+esc(v.num)+" "+esc(v.rue) : (o.noStreet?"":esc(v.rue)+(v.ville?", "+esc(v.ville):""));
+  return `<button class="item" data-id="${esc(v.id)}">
+    <span class="no">${esc(v.num||"–")}</span>
+    <span class="body">${title?`<span class="t">${title}</span>`:""}
+      ${tags?`<span class="m" style="margin:2px 0">${tags}</span>`:""}
+      <span class="m">${meta.join(" · ")}${v.notes?" · "+esc(v.notes.slice(0,60)):""}</span></span>
+    <span class="chip" data-s="${esc(v.statut)}">${esc(S[v.statut]?S[v.statut].l:"")}</span></button>`;
+}
+function bindItems(root){ root.querySelectorAll(".item[data-id]").forEach(b=>b.onclick=()=>{ const v=visits.find(x=>x.id===b.dataset.id); if(v) openSheet(v,false); }); }
+
+function renderPorte(){
+  const today = visits.filter(v=>dayKey(v.ts)===todayKey());
+  $("doorsToday").innerHTML = today.length+"<small>portes aujourd'hui</small>";
+  const rec = visits.slice(0,6);
+  $("recent").innerHTML = rec.length ? rec.map(v=>itemHTML(v)).join("")
+    : `<div class="empty"><b>Aucune porte pour l'instant</b>Touche « Ma position » ou saisis la rue, puis le résultat. Les refus et l'absence s'enregistrent en un seul geste ; Vendu ouvre la fiche client.</div>`;
+  bindItems($("recent"));
+  $("dl-rues").innerHTML = [...new Set(visits.map(v=>v.rue).filter(Boolean))].slice(0,30).map(r=>`<option value="${esc(r)}">`).join("");
+  $("dl-villes").innerHTML = [...new Set(visits.map(v=>v.ville).filter(Boolean))].slice(0,15).map(r=>`<option value="${esc(r)}">`).join("");
+}
+
+let jFilter = "all";
+function renderJournal(){
+  const d = $("j-date").value || todayKey(); const q = $("j-q").value.trim().toLowerCase();
+  let list = q ? visits.filter(v => [v.rue,v.ville,v.nom,v.tel,v.notes,v.num,v.produit,v.code].join(" ").toLowerCase().includes(q))
+               : visits.filter(v => dayKey(v.ts)===d);
+  const counts = {all:list.length}; Object.keys(S).forEach(k=>counts[k]=list.filter(v=>v.statut===k).length);
+  $("j-filters").innerHTML = ["all",...Object.keys(S).filter(k=>!S[k].legacy||counts[k])].map(k=>`<button data-f="${k}" class="${jFilter===k?"on":""}">${k==="all"?"Tout":S[k].l} ${counts[k]}</button>`).join("");
+  $("j-filters").querySelectorAll("button").forEach(b=>b.onclick=()=>{ jFilter=b.dataset.f; renderJournal(); });
+  if(jFilter!=="all") list = list.filter(v=>v.statut===jFilter);
+  if(!list.length){ $("journal").innerHTML = `<div class="empty"><b>Rien ce jour-là</b>${q?"Aucune porte ne correspond à la recherche.":"Choisis un autre jour ou cherche un nom."}</div>`; return; }
+  const groups = new Map();
+  list.forEach(v=>{ const k=(v.rue||"Sans rue")+(v.ville?" · "+v.ville:""); if(!groups.has(k)) groups.set(k,[]); groups.get(k).push(v); });
+  let html="";
+  groups.forEach((arr,k)=>{ arr.sort((a,b)=>(parseInt(a.num)||0)-(parseInt(b.num)||0));
+    html += `<div class="street-h">${esc(k)} · ${arr.length}</div>` + arr.map(v=>itemHTML(v,{noStreet:true,showDate:!!q})).join(""); });
+  $("journal").innerHTML = html; bindItems($("journal"));
+}
+$("j-date").addEventListener("change",renderJournal);
+$("j-q").addEventListener("input",renderJournal);
+
+function renderRepasser(){
+  const now = Date.now();
+  const old = visits.filter(v=>(v.statut==="rappel"||v.statut==="rdv") && !v.fait).sort((a,b)=>(a.rappel||"9999").localeCompare(b.rappel||"9999"));
+  $("rappels-wrap").hidden = !old.length;
+  $("rappels").innerHTML = old.map(v=>itemHTML(v,{showDate:true})).join("");
+  bindItems($("rappels"));
+  const since = now - 14*86400000, latest = new Map();
+  visits.forEach(v=>{ const k=[v.num,v.rue,v.ville].join("|").toLowerCase(); if(!latest.has(k)) latest.set(k,v); });
+  const rep = [...latest.values()].filter(v=>v.statut==="absent" && v.ts>=since);
+  const due = rep.filter(v=>dayKey(v.ts)<todayKey()).length;
+  $("badge").hidden = !due; $("badge").textContent = due;
+  $("repasser").innerHTML = rep.length ? rep.map(v=>itemHTML(v,{showDate:true})).join("")
+    : `<div class="empty"><b>Personne à repasser</b>Les absents des 14 derniers jours s'affichent ici jusqu'à ce que tu repasses.</div>`;
+  bindItems($("repasser"));
+}
+
+/* ---------- Portefeuille clients ---------- */
+let cGroup = ls.get("mt.cgroup","ville");
+const cSel = { ville:$("c-ville"), rue:$("c-rue"), code:$("c-code"), produit:$("c-produit"), suivi:$("c-suivi") };
+$("c-group").querySelectorAll("button").forEach(b=>{
+  b.classList.toggle("on", b.dataset.g===cGroup);
+  b.onclick=()=>{ cGroup=b.dataset.g; ls.set("mt.cgroup",cGroup); $("c-group").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b)); renderClients(); };
+});
+Object.values(cSel).forEach(s=>s.addEventListener("change",()=>{ if(s===cSel.ville) cSel.rue.value=""; renderClients(); }));
+$("c-q").addEventListener("input",renderClients);
+function fillSelect(sel, all, values, labels){
+  const cur = sel.value;
+  sel.innerHTML = `<option value="">${all}</option>` + values.map(v=>`<option value="${esc(v)}">${esc(labels?labels[v]:v)}</option>`).join("");
+  sel.value = values.includes(cur) ? cur : "";
+}
+function renderClients(){
+  const clients = visits.filter(v=>v.statut==="vente");
+  const uniq = arr => [...new Set(arr.filter(Boolean))].sort((a,b)=>a.localeCompare(b,"fr"));
+  fillSelect(cSel.ville, "Toutes", uniq(clients.map(v=>v.ville)));
+  fillSelect(cSel.rue, "Toutes", uniq(clients.filter(v=>!cSel.ville.value||v.ville===cSel.ville.value).map(v=>v.rue)));
+  fillSelect(cSel.code, "Tous", uniq([...settings.codes, ...clients.map(v=>v.code)]));
+  fillSelect(cSel.produit, "Toutes", uniq([...settings.produits, ...clients.map(v=>v.produit)]));
+  fillSelect(cSel.suivi, "Tous", Object.keys(SUIVI), SUIVI);
+  const q = $("c-q").value.trim().toLowerCase();
+  const list = clients.filter(v =>
+    (!cSel.ville.value || v.ville===cSel.ville.value) && (!cSel.rue.value || v.rue===cSel.rue.value) &&
+    (!cSel.code.value || v.code===cSel.code.value) && (!cSel.produit.value || v.produit===cSel.produit.value) &&
+    (!cSel.suivi.value || (v.suivi||"signe")===cSel.suivi.value) &&
+    (!q || [v.nom,v.tel,v.rue,v.ville,v.notes].join(" ").toLowerCase().includes(q)));
+  const ca = list.filter(v=>v.suivi!=="annule").reduce((s,v)=>s+(Number(v.montant)||0),0);
+  $("c-kpis").innerHTML = [[list.length,"Clients"],[list.filter(v=>v.suivi==="raccorde").length,"Raccordés"],[euro(ca),"CA (hors annulés)"]]
+    .map(([v,k])=>`<div class="kpi"><div class="v">${v}</div><div class="k">${k}</div></div>`).join("");
+  if(!list.length){
+    $("clients").innerHTML = `<div class="empty"><b>${clients.length?"Aucun client pour ces filtres":"Pas encore de client"}</b>${clients.length?"Élargis les filtres ou efface la recherche.":"Chaque porte enregistrée en « Vendu » rejoint ton portefeuille, avec son offre et son code vendeur."}</div>`;
+    return;
+  }
+  const keyOf = v => cGroup==="ville" ? (v.ville||"Commune non renseignée") : cGroup==="code" ? (v.code||"Sans code vendeur") : (v.produit||"Offre non renseignée");
+  const groups = new Map();
+  list.forEach(v=>{ const k=keyOf(v); if(!groups.has(k)) groups.set(k,[]); groups.get(k).push(v); });
+  let html="";
+  [...groups.keys()].sort((a,b)=>a.localeCompare(b,"fr")).forEach(k=>{
+    const arr = groups.get(k).sort((a,b)=> (a.rue||"").localeCompare(b.rue||"","fr") || (parseInt(a.num)||0)-(parseInt(b.num)||0));
+    const gca = arr.filter(v=>v.suivi!=="annule").reduce((s,v)=>s+(Number(v.montant)||0),0);
+    html += `<div class="street-h ghead"><span>${esc(k)}</span><b>${arr.length} client${arr.length>1?"s":""}${gca?" · "+euro(gca):""}</b></div>`
+      + arr.map(v=>itemHTML(v,{client:true,showDate:true})).join("");
+  });
+  $("clients").innerHTML = html; bindItems($("clients"));
+}
+
+/* ---------- Bilan ---------- */
+let period = "day";
+$("b-period").querySelectorAll("button").forEach(b=>b.onclick=()=>{ period=b.dataset.p; $("b-period").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b)); renderBilan(); });
+function renderBilan(){
+  const now=new Date(); let start;
+  if(period==="day") start=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  else if(period==="week") start=new Date(now.getFullYear(),now.getMonth(),now.getDate()-6);
+  else start=new Date(now.getFullYear(),now.getMonth(),1);
+  const L = visits.filter(v=>v.ts>=start.getTime());
+  const n = L.length, open = L.filter(v=>OPEN(v.statut)).length;
+  const c = k=>L.filter(v=>v.statut===k).length;
+  const ventes=c("vente"), presentes=c("pres")+c("rdv")+c("rappel")+ventes;
+  const ca = L.filter(v=>v.statut==="vente" && v.suivi!=="annule").reduce((s,v)=>s+(Number(v.montant)||0),0);
+  const pct = (a,b)=> b? Math.round(a*100/b)+" %" : "–";
+  $("kpis").innerHTML = [
+    [n,"Portes frappées"],[open,"Portes ouvertes"],[pct(open,n),"Taux d'ouverture"],
+    [presentes,"Présentations faites"],[ventes,"Ventes"],[pct(ventes,presentes),"Transfo. (ventes/présentations)"]
+  ].map(([v,k])=>`<div class="kpi"><div class="v">${v}</div><div class="k">${k}</div></div>`).join("")
+   + `<div class="kpi" style="grid-column:1/-1"><div class="v">${euro(ca)}</div><div class="k">Chiffre d'affaires signé${ventes?" · panier moyen "+euro(ca/ventes):""}</div></div>`;
+  const steps=[["Portes",n],["Ouvertes",open],["Présentations",presentes],["Ventes",ventes]];
+  $("funnel").innerHTML = steps.map(([l,v])=>`<div class="fl"><span>${l}</span><span class="tr"><i style="width:${n?Math.max(v?3:0,v*100/n):0}%"></i></span><span class="c">${v}</span></div>`).join("");
+  const per=[]; for(let i=6;i>=0;i--){ const d=new Date(now.getFullYear(),now.getMonth(),now.getDate()-i); const k=dayKey(d); const l=visits.filter(v=>dayKey(v.ts)===k); per.push({d,n:l.length,s:l.filter(v=>v.statut==="vente").length}); }
+  const max = Math.max(1,...per.map(p=>p.n));
+  $("bars").innerHTML = per.map(p=>`<div class="bar"><span class="n">${p.n||""}</span>
+    <div class="col" style="height:${p.n?Math.max(4,p.n*100/max):2}%"><i style="height:${p.n?p.s*100/p.n:0}%"></i></div>
+    <span class="d">${p.d.toLocaleDateString("fr-FR",{weekday:"short"}).replace(".","")}</span></div>`).join("");
+  renderBackupState();
+}
+
+/* ---------- Sauvegarde / export / restauration ---------- */
+async function giveFile(name, text, mime){
+  const blob = new Blob([text], {type:mime});
+  try{
+    const file = new File([blob], name, {type:mime});
+    if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:name}); return true; }
+  }catch(e){ if(e && e.name==="AbortError") return false; }
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+  return true;
+}
+function renderBackupState(){
+  const last = ls.get("mt.lastBackup", 0);
+  const days = last ? Math.floor((Date.now()-last)/86400000) : null;
+  $("data-note").textContent = (last ? "Dernière sauvegarde : "+(days===0?"aujourd'hui":"il y a "+days+" jour"+(days>1?"s":""))+". " : "Aucune sauvegarde pour l'instant. ")
+    + "Tes données restent sur ce téléphone : range le fichier dans ton cloud Murena.";
+  const late = visits.length>0 && (!last || days>=7);
+  $("backup-banner").hidden = !late;
+  if(late) $("backup-msg").textContent = last ? "Dernière sauvegarde il y a "+days+" jours." : "Tu n'as encore jamais sauvegardé tes données.";
+}
+async function backup(){
+  const data = JSON.stringify({app:"ma-tournee", version:1, date:new Date().toISOString(), settings, visits});
+  if(await giveFile("ma-tournee-sauvegarde-"+todayKey()+".json", data, "application/json")){ ls.set("mt.lastBackup", Date.now()); renderBackupState(); showToast("Sauvegarde prête."); }
+}
+$("backup").onclick = backup; $("backup-now").onclick = backup;
+const CSV_HEAD=["Date","Heure","Numéro","Rue","Commune","Résultat","Nom","Téléphone","Rappel/RDV","Montant €","Notes","Rappel fait","Offre","Code vendeur","Suivi"];
+$("export").onclick = async ()=>{
+  const q = s => '"'+String(s??"").replace(/"/g,'""')+'"';
+  const rows = visits.slice().reverse().map(v=>{ const d=new Date(v.ts);
+    return [d.toLocaleDateString("fr-FR"),fmtTime(v.ts),v.num,v.rue,v.ville,S[v.statut]?S[v.statut].l:v.statut,v.nom,v.tel,v.rappel?fmtWhen(v.rappel):"",v.montant,v.notes,v.fait?"oui":"",v.produit,v.code,v.statut==="vente"?SUIVI[v.suivi||"signe"]:""].map(q).join(";"); });
+  await giveFile("tournee-"+todayKey()+".csv", "﻿"+[CSV_HEAD.map(q).join(";"),...rows].join("\r\n"), "text/csv");
+};
+function parseCSV(text){
+  text = text.replace(/^﻿/,""); const sep = (text.split("\n")[0].match(/;/g)||[]).length >= (text.split("\n")[0].match(/,/g)||[]).length ? ";" : ",";
+  const rows=[]; let row=[], cur="", inQ=false;
+  for(let i=0;i<text.length;i++){ const ch=text[i];
+    if(inQ){ if(ch==='"'){ if(text[i+1]==='"'){ cur+='"'; i++; } else inQ=false; } else cur+=ch; }
+    else if(ch==='"') inQ=true; else if(ch===sep){ row.push(cur); cur=""; }
+    else if(ch==="\n"){ row.push(cur.replace(/\r$/,"")); rows.push(row); row=[]; cur=""; } else cur+=ch; }
+  if(cur||row.length){ row.push(cur); rows.push(row); }
+  return rows.filter(r=>r.some(x=>x.trim()));
+}
+function hash(s){ let h=0; for(let i=0;i<s.length;i++){ h=(h*31+s.charCodeAt(i))|0; } return (h>>>0).toString(36); }
+function fromCSV(text){
+  const rows = parseCSV(text); if(!rows.length) return [];
+  const H = rows[0].map(h=>h.trim()); const col = name => H.indexOf(name);
+  const byLabel = {}; Object.keys(S).forEach(k=>byLabel[S[k].l.toLowerCase()]=k);
+  const suiviBy = {}; Object.keys(SUIVI).forEach(k=>suiviBy[SUIVI[k].toLowerCase()]=k);
+  return rows.slice(1).map(r=>{
+    const g = n => { const i=col(n); return i>=0 ? (r[i]||"").trim() : ""; };
+    const [dd,mm,yy] = g("Date").split("/").map(Number); const [hh,mi] = g("Heure").split("h").map(Number);
+    const ts = new Date(yy||2000,(mm||1)-1,dd||1,hh||0,mi||0).getTime();
+    const statut = byLabel[g("Résultat").toLowerCase()] || "absent";
+    return { id:"csv-"+hash(r.join("|")), ts, num:g("Numéro"), rue:g("Rue"), ville:g("Commune"), statut, nom:g("Nom"), tel:g("Téléphone"),
+      montant:g("Montant €"), notes:g("Notes"), fait:g("Rappel fait")==="oui", produit:g("Offre"), code:g("Code vendeur"),
+      suivi: statut==="vente" ? (suiviBy[g("Suivi").toLowerCase()]||"signe") : "" };
+  }).filter(v=>v.rue||v.nom);
+}
+$("restore").onclick = ()=>$("restore-file").click();
+$("restore-file").onchange = async e=>{
+  const f = e.target.files[0]; e.target.value=""; if(!f) return;
+  try{
+    const text = await f.text(); let incoming = [], st = null;
+    if(/^\s*\{/.test(text)){ const j = JSON.parse(text); if(j.app!=="ma-tournee") throw new Error("format"); incoming = j.visits||[]; st = j.settings; }
+    else incoming = fromCSV(text);
+    const have = new Set(visits.map(v=>v.id)); const add = incoming.filter(v=>v && v.id && !have.has(v.id));
+    if(st){ settings.produits=[...new Set([...settings.produits,...(st.produits||[])])]; settings.codes=[...new Set([...settings.codes,...(st.codes||[])])]; if(!settings.lastCode) settings.lastCode=st.lastCode||""; ls.set("mt.settings",settings); }
+    setVisits(visits.concat(add)); persist();
+    $("data-note").textContent = add.length+" porte"+(add.length>1?"s":"")+" ajoutée"+(add.length>1?"s":"")+" ("+(incoming.length-add.length)+" déjà présente"+(incoming.length-add.length>1?"s":"")+").";
+  }catch(err){ $("data-note").textContent = "Ce fichier n'est pas une sauvegarde Ma Tournée ni un export CSV de l'appli."; }
+};
+
+/* ---------- Tabs ---------- */
+const views=["porte","journal","repasser","clients","bilan"];
+function show(v){
+  if(!views.includes(v)) v="porte";
+  views.forEach(x=>$("v-"+x).hidden = x!==v);
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.classList.toggle("on",b.dataset.v===v));
+  ls.set("mt.tab",v); window.scrollTo(0,0);
+}
+document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>show(b.dataset.v));
+
+function renderAll(){ renderPorte(); renderJournal(); renderRepasser(); renderClients(); renderBilan(); }
+
+$("today").textContent = new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
+$("j-date").value = todayKey();
+setPas(pas);
+show(ls.get("mt.tab","porte"));
+setVisits(ls.get("mt.visits", []));
+if(!fRue.value) locate();
+
+if("serviceWorker" in navigator && location.protocol==="https:"){ navigator.serviceWorker.register("sw.js").catch(()=>{}); }
+let wl=null; async function wake(){ try{ if(navigator.wakeLock && document.visibilityState==="visible") wl = await navigator.wakeLock.request("screen"); }catch(e){} }
+document.addEventListener("visibilitychange", wake); wake();
+})();
+</script>
+</body>
+</html>
